@@ -1,0 +1,31 @@
+FROM php:8.3.14-fpm
+
+# Instala as dependências do sistema
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    git \
+    curl \
+    nodejs \
+    npm \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_sqlite zip
+
+# Instala o Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Configura o diretório de trabalho
+WORKDIR /var/www/html
+
+# Copia o script de inicialização
+COPY ./scripts/setup.sh /usr/local/bin/setup.sh
+RUN chmod +x /usr/local/bin/setup.sh
+
+# Executa o script de inicialização
+RUN /usr/local/bin/setup.sh
+
+CMD ["php-fpm"]
